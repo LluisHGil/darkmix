@@ -1,4 +1,4 @@
-# November 16, 2019
+# March 29, 2020
 # 
 # ================================================================================
 # Title: Mixture Models for detection and characterization of Dark Matter halos
@@ -10,16 +10,8 @@
 # Code tested under the following compilers/operating systems: 
 #      R version 3.5.2 (2018-12-20) -- "Eggshell Igloo" on Macintosh
 # 
-# Description of input and output: 
-#    Input and output of the various R functions in this library are described below. Here, 
-#    we give a general overview of the input and output of the fitting recipe, described
-#    in the article, using these functions.
-#    Input: dataset "datacat.txt"
-#    Output: Fitted mixture model parameters are saved in the varable "param"
-#            Surface density maps of data halos and model as in Figure 2. Axis units of Mpc/h.
-#            Model absolute and residual residual maps as in Figure 3. Axis units of Mpc/h.
-#            Observed and generated dataset with components' centers and radii as in Figure 4. Axis units of Mpc/h.
-#            Fitted profiles for single components and full model as in Figure 5. Axis units of Mpc/h.
+# Functions of darkmix.R library. Each function includes a brief explanation of it purpose and the 
+# definition of its input and output arguments. A usage example is provided.
 #
 # System requirements: R version 3.5.2 or later. Spatstat version 1.58-2 or later.
 # 
@@ -1451,13 +1443,15 @@ gen.pattern <- function(param, param2, pop, window, scl=2)
     z <- dist*cos(theta) + param.pass[3]
     iner <- inside.shell(x,y,z,window)[[1]]
     min <- min(length(iner[,1]), round(pop[i]))
-    iner <- iner[1:min,]
-    halo <- rbind(halo, iner) # Save halo
+    if(min != 0) {
+      iner <- iner[1:min,]
+      halo <- rbind(halo, iner) # Save halo
+    }
     # New halo
     p1 <- (v+1)*i
     p2 <- (v+1)*i+v
     param.pass <- param[p1:p2]
-  }  
+  } 
   # Background
   x <- runif(round(pop[k+1]), window$xrange[1], window$xrange[2])
   y <- runif(round(pop[k+1]), window$yrange[1], window$yrange[2])
@@ -1717,11 +1711,11 @@ plot.profile <- function(param, param2, clust, comp, xlim=c(0.1, 40), nbin=60, m
   mm.pro <- profile.mm(comp, param, param2, clust, shells, norm, M = 1e4)
 
   # Plot
-  dev.off()
+  main <- paste('Component', toString(comp))
   miny <- min(mm.pro[,2]); maxy <- max(c(emp.pro[,2], comp.pro[,2], mm.pro[,2]))
   #png("Profile_xy_3D.png", width=880, height=880)
   #par(mar=c(5,5,3,0))
-  plot(emp.pro[,1], emp.pro[,2], cex=3, pch=16, log="xy", ylim=c(miny, maxy), type="b", xlab="r Mpc/h", ylab="Density", main=main) #, cex.lab=3, cex.axis=3, cex.main=3)
+  plot(emp.pro[,1], emp.pro[,2], cex=1, pch=16, log="xy", ylim=c(miny, maxy), type="b", xlab="r Mpc/h", ylab="Density", main=main) #, cex.lab=3, cex.axis=3, cex.main=3)
   lines(comp.pro[,1], comp.pro[,2], lwd=2, col=2)
   lines(mm.pro[,1], mm.pro[,2], lwd=2, col=3)
   if(flag.legend==TRUE) {
@@ -1819,10 +1813,17 @@ membership <- function(param, param2, model, clust, print=TRUE, w=880, h=880) {
     par(mar=c(0,0,0,0))
     plot(clust$data$x, clust$data$y, col=0)
     for(i in 1:(k-1)) {
-      points(clust$data$x[ret[,k+1]==i], clust$data$y[ret[,k+1]==i], pch=i, col=i, cex=1.5)
+      points(clust$data$x[ret[,k+1]==i], clust$data$y[ret[,k+1]==i], pch=16, col=i, cex=1.5)
     }
-    points(clust$data$x[ret[,k+1]==k], clust$data$y[ret[,k+1]==k], pch=k, col=k, cex=1.5)
+    points(clust$data$x[ret[,k+1]==k], clust$data$y[ret[,k+1]==k], pch=16, col=k, cex=1.5)
     dev.off()
+  }
+  else {
+    plot(clust$data$x, clust$data$y, col=0)
+    for(i in 1:(k-1)) {
+      points(clust$data$x[ret[,k+1]==i], clust$data$y[ret[,k+1]==i], pch=16, col=i, cex=0.5)
+    }
+    points(clust$data$x[ret[,k+1]==k], clust$data$y[ret[,k+1]==k], pch=16, col=k, cex=0.5)
   }
   
   return(ret)
