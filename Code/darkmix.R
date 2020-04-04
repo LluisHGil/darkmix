@@ -1806,25 +1806,18 @@ membership <- function(param, param2, model, clust, print=TRUE, w=880, h=880) {
   }
   ret <- cbind(prob,class)
   colnames(ret) <- c(names,"class")
+  ret <- as.data.frame(ret)
   
   if(print==TRUE) {
     name <- "classification.png"
     png(name, width = w, height = h) 
     par(mar=c(0,0,0,0))
-    plot(clust$data$x, clust$data$y, col=0)
-    for(i in 1:(k-1)) {
-      points(clust$data$x[ret[,k+1]==i], clust$data$y[ret[,k+1]==i], pch=16, col=i, cex=1.5)
-    }
-    points(clust$data$x[ret[,k+1]==k], clust$data$y[ret[,k+1]==k], pch=16, col=k, cex=1.5)
-    dev.off()
   }
-  else {
-    plot(clust$data$x, clust$data$y, col=0)
-    for(i in 1:(k-1)) {
-      points(clust$data$x[ret[,k+1]==i], clust$data$y[ret[,k+1]==i], pch=16, col=i, cex=0.5)
-    }
-    points(clust$data$x[ret[,k+1]==k], clust$data$y[ret[,k+1]==k], pch=16, col=k, cex=0.5)
-  }
+  clust2d <- ppp(x=clust$data$x, y=clust$data$y, 
+                 window=owin(xrange=clust$domain$xrange, yrange=clust$domain$yrange),
+                 marks=ret$class)
+  plot(clust2d, use.marks=TRUE, symap=symbolmap(inputs=1:(k+1), col=1:(k+1), pch=16), main="")
+  if(print==TRUE){dev.off()}
   
-  return(as.data.frame(ret))
+  return(ret)
 }  
