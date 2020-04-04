@@ -1826,5 +1826,5 @@ membership <- function(param, param2, model, clust, print=TRUE, w=880, h=880) {
     points(clust$data$x[ret[,k+1]==k], clust$data$y[ret[,k+1]==k], pch=16, col=k, cex=0.5)
   }
   
-  return(ret)
+  return(as.data.frame(ret))
 }  
