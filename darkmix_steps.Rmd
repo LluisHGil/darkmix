@@ -54,6 +54,7 @@ miny <- 171; maxy <- 196;
 minz <- 95; maxz <- 102;
 clust <- pp3(x=data[,2],y=data[,3],z=data[,4], box3(xrange=c(minx,maxx), yrange=c(miny,maxy), zrange=c(minz,maxz)))
 ntile <- c(50,50,14)
+ntile <- c(100,100,28)
 quad <- quad.3d(clust, ntile)
 ```
 
@@ -81,7 +82,7 @@ The initial guess can be visualized:
 
 ```{r, message=FALSE}
 arg = list(mar=c(0,0,0,0), clust=clust, col=2, pch=16,border=2, cex=0.5, cexl=2, lwd=2)
-out <- mixture.model(param, param2, output = NULL, action.draw,arg)
+out <- mixture.model(param, param2, output = NULL, action.draw, arg)
 ```
 
 ### Step 3 -- Likelihood maximization 
@@ -143,14 +144,15 @@ plot.mm3d(param, param2, clust, quad, residual.type="raw", bandwidth=1, maps=map
 The membership of each particle to the clusters can be obtained and plotted as follows:
 
 ```{r}
-class <- membership(param, param2, mixture.model, clust, print=FALSE)
+classification <- membership(param, param2, mixture.model, clust, threshold=0.3, print=FALSE)
 ```
 
 Another possibility is to generate new samples reproducing the original data set (if a component has very few particles warnings might appear).
 
 ```{r, warning=FALSE}
 window <- clust$domain
-data_generated <- gen.pattern(param, param2, pop, window, scl=4)
+num_particles <- data.frame(table(classification[[1]]$class))
+data_generated <- gen.pattern(param, param2, num_particles, window, scl=4)
 ```
 
 Visualize the new sample with

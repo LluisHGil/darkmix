@@ -399,7 +399,9 @@ action.draw <- function(output=NULL,i,par1,par2,n_param,n_models,p1,model,arg) {
     plot(arg$clust$data$x,arg$clust$data$y,cex=arg$cex,pch=arg$pch)	}
   param_new=NULL
   if (n_param > 0) { param_new=par1[1:n_param] }
-  points(param_new[1],param_new[2],pch=toString(i),col=arg$col,cex=arg$cexl)
+  if (!is.null(param_new)) {
+    text(param_new[1],param_new[2],labels=toString(i),col=arg$col,cex=arg$cexl)
+  }
   draw.circle(param_new[1],param_new[2],param_new[4],border=arg$border,lwd=arg$lwd)
 }
 
@@ -1408,10 +1410,18 @@ plot.mm2d <- function(param, param2, clust, quad.residuals, bandwidth=1, maps = 
 # component (pop), the data set window (window) and an integer (scl). Argument scl is to be increased
 # if the function do not generate as many points as sum(pop).
 # Output is a pp3 object with the generated data set.
-# Usage> gen.pattern(param, param2, pop=c(100,50,200,70), window, scl=2)
+# Usage> gen.pattern(param, param2, pop, window, scl=2)
 #
 gen.pattern <- function(param, param2, pop, window, scl=2)
 {
+  # Fill empty values if existing
+  df <- data.frame(matrix(c(1:(k+1), rep(0,k+1)), ncol = 2))
+  colnames(df) <- c('Var1', 'Zero')
+  colnames(pop) <- c('Var1', 'Freq')
+  pop <- merge(df, pop, by='Var1', all=TRUE)
+  pop[is.na(pop)] <- 0
+  pop <- pop$Freq
+
   # Maximum distance inside window
   max.dist <- sqrt((window$xrange[2]-window$xrange[1])^2 + (window$yrange[2]-window$yrange[1])^2 + (window$zrange[2]-window$zrange[1])^2)
   k <- param2[[1]]-1
@@ -1784,14 +1794,14 @@ around <- function(dens,i,j,k) {
 # membership (Calculates the membership probability of each particle)
 # 
 # Inputs are the parameters (param), the model functions (param2), the mixture.model (model),
-# the data set (clust) and a logical variable stating if the plots is to be stored as a figure (print) 
+# the data set (clust) and a logical variable stating if the plot is to be stored as a figure (print) 
 # and its dimensions (w, h).
 # Output is a dataframe with as many columns as components + 1 and as many rows as particles.
 # Each column contains the probability that particle i belongs to components j. The last column
 # is the component assigned to particle i according to a multinomial distribution.
-# Usage> membership(param, param2, mixture.model, clust, TRUE, 880, 880)
+# Usage> membership(param, param2, mixture.model, clust, FALSE, 0, TRUE, 880, 880)
 #
-membership <- function(param, param2, model, clust, print=TRUE, w=880, h=880) {
+membership <- function(param, param2, model, clust, threshold=0, ci=FALSE, sigma=0, num_sam=100, print=TRUE, w=880, h=880) {
   n <- length(clust$data$x)
   k <- param2[[1]]
   arg = list(x1=clust$data$x,y1=clust$data$y,z1=clust$data$z)
@@ -1802,12 +1812,45 @@ membership <- function(param, param2, model, clust, print=TRUE, w=880, h=880) {
   for(i in 2:k) {names <- c(names, paste("p",i, sep=""))}
   class <- c()
   for(i in 1:n) {
-    class[i] <- which.max(rmultinom(1,1,prob[i,]))
+    class[i] <- which.max(rmultinom(1,1,prob[i,]))  		
+    if ((threshold > 0) & (all(prob[i,] < threshold))) {
+        class[i] <- k
+    } else if(max(prob[i,]) == prob[i,k]) {
+        class[i] <- k
+    }
   }
   ret <- cbind(prob,class)
   colnames(ret) <- c(names,"class")
   ret <- as.data.frame(ret)
   
+  # Error bars
+  sigma_sam <- c()
+  if (ci) {
+  	l <- length(param)
+  	member_sam <- matrix(NA,n,num_sam)
+  	for(j in 1:num_sam) {
+     		p <- param + rnorm(l,0,sigma)
+        prob <- mixture.model(param=p,param2=param2,output,action.member,arg)
+        prob <- t(apply(prob, 1, function(x)(x/sum(x))))
+        for(i in 1:n) {
+  	        if (all(prob[i,] < threshold)) {
+  		        member_sam[i,j] <- k
+  	        }
+  	        else {
+	            member_sam[i,j] <- which.max(rmultinom(1,1,prob[i,]))  		
+  	        }
+        }
+  	}
+  	number_sam <- matrix(NA,k,num_sam)
+  	for(i in 1:num_sam) {
+  	    number_sam[,i] <- as.matrix(table(member_sam[,i]))
+  	}
+  	for(j in 1:k) {
+  	    sigma_sam[j] <- round(sd(number_sam[j,]))
+  	}
+  }
+  
+  # Make plot
   if(print==TRUE) {
     name <- "classification.png"
     png(name, width = w, height = h) 
@@ -1815,9 +1858,13 @@ membership <- function(param, param2, model, clust, print=TRUE, w=880, h=880) {
   }
   clust2d <- ppp(x=clust$data$x, y=clust$data$y, 
                  window=owin(xrange=clust$domain$xrange, yrange=clust$domain$yrange),
-                 marks=ret$class)
-  plot(clust2d, use.marks=TRUE, symap=symbolmap(inputs=1:(k+1), col=1:(k+1), pch=16), main="")
+                 marks=ret$class) 
+  colmap <- colourmap(rainbow((5+k)), inputs=1:(5+k))
+  sy <- symbolmap(pch=21, bg=colmap, inputs=1:(5+k), cex=2, nsymbols=(5+k))
+  plot(clust2d, symap=sy, legend=TRUE, main="", leg.args=list(cex=2, cexl=2))
   if(print==TRUE){dev.off()}
   
-  return(ret)
+  return(list(ret,sigma_sam))
 }  
+
+
