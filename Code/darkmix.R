@@ -663,7 +663,7 @@ mask.adjust_mix <- function(k,v) {
 # 
 # Inputs are the model parameters (param), the model functions (param2), the data set (clust),
 # and the grid (quad).
-# Output is the Maximum Likelihod, the Akeike Information Criteron and the Bayesian Information Criterion
+# Output is the Maximum Log-Likelihod, the Akaike Information Criteron and the Bayesian Information Criterion
 # Usage> AIC.BIC(param, param2, clust, quad)
 #
 AIC.BIC <- function(param,param2,clust,quad)
@@ -671,8 +671,8 @@ AIC.BIC <- function(param,param2,clust,quad)
   N <- length(clust$data$x)
   L <- -model.lik(param, param2, mixture.model, clust, quad);
   AIC <- -2*L + length(param)*2.0; 
-  BIC <- -2*L + log(N)*param2[[1]]
-  print(paste("Maximum likelihood:", L))
+  BIC <- -2*L + log(N)*length(param)
+  print(paste("Maximum log-likelihood:", L))
   print(paste("AIC:", AIC))
   print(paste("BIC:", BIC))
   return(c(L,AIC,BIC));
