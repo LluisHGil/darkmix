@@ -370,7 +370,7 @@ summary {
 <div id="mixture-models-for-detection-and-characterization-of-dark-matter-halos" class="section level2">
 <h2>Mixture Models for detection and characterization of Dark Matter halos</h2>
 <p>Authors: Lluís Hurtado-Gil, Michael A. Kuhn, Pablo Arnalte-Mur, Eric D. Feigelson, Vicent J. Martínez</p>
-<p>In this notebook we reproduce the example presented in section 6 of publication Hurtado-Gil et al. in prep.</p>
+<p>In this notebook we reproduce the example presented in section 6 of publication Hurtado-Gil et al. in prep.</p>
 <p>Requirements:</p>
 <ul>
 <li>R version 3.5.2 (2018-12-20) – “Eggshell Igloo” on Macintosh (or later)</li>
@@ -450,7 +450,7 @@ param &lt;- mask.freeze(param, param2, mask.adjust_mix(k,v), clust, quad)</code>
 <pre class="r"><code>aic_bic &lt;- AIC.BIC(param, param2, clust, quad)</code></pre>
 <pre><code>## [1] &quot;Maximum likelihood: 1259.97151973845&quot;
 ## [1] &quot;AIC: -2399.94303947691&quot;
-## [1] &quot;BIC: -2435.89639738658&quot;</code></pre>
+## [1] &quot;BIC: -2061.50680989329&quot;</code></pre>
 <p>However, the resulting parameters are still far from the best fit. Repeat the previous steps to obtain better results. In the following steps we present the results with the already obtained fit.</p>
 <p>Visiualize again to see the new model:</p>
 <pre class="r"><code>arg = list(mar=c(0,0,0,0), clust=clust, col=2, pch=16,border=2, cex=0.5, cexl=2, lwd=2)
