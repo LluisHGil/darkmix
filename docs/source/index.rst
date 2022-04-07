@@ -6,6 +6,13 @@
 Welcome to darkmix's documentation!
 ===================================
 
+.. warning::
+
+   This documentation for the `darkmix <https://github.com/LluisHGil/darkmix>`_ code is a work in progress.
+   It may change often and not contain the most updated information.
+   For the time being, if you want to use this code, please refer to the GitHub repository or contact
+   Lluis.Hurtado@uv.es or Pablo.Arnalte@uv.es
+
 ..
    (This is a comment PAM, 7/04/2022):
    to remove the TOC from this page, but keep it in the
