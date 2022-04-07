@@ -1,9 +1,11 @@
 build/
-.*
 *~
 kernel_absolute_residuals
 kernel_fourier_residuals
 kernel_lambda
 unionquad.*
+.DS_Store
+.R*
+.ipynb_checkpoints
 
 
