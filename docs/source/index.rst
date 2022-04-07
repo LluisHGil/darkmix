@@ -6,9 +6,18 @@
 Welcome to darkmix's documentation!
 ===================================
 
+..
+   (This is a comment PAM, 7/04/2022):
+   to remove the TOC from this page, but keep it in the
+   side bar, add the option ':hidden:' below
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+   introduction
+   darkmix_init_test
+    
 
 
 
