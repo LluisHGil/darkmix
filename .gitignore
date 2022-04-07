@@ -1,0 +1,8 @@
+build/
+.*
+*~
+kernel_absolute_residuals
+kernel_fourier_residuals
+kernel_lambda
+
+
