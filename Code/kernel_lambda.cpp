@@ -93,6 +93,8 @@ int main(int argc, char ** argv)
     //Data and Dummy points plus residuals, voronoi weights and Sigma density function
     double **process, **Ujitter;
     
+    fprintf(stdout, "Vales %d %d \n", N, M);
+    
     process  = (double **) malloc((N+M+1)*sizeof(double)); assert(process); //Read all
     Ujitter  = (double **) malloc((N+M+1)*sizeof(double)); assert(Ujitter); //Read all
     // input:   x    y   z   r   voro   sigma
@@ -122,19 +124,22 @@ int main(int argc, char ** argv)
     // Arrays for kernel density and residuals density field
     double *kernel, *model_dens;
     
-    model_dens = (double *) malloc((M+1)*sizeof(double)); assert(model_dens);
+    model_dens = (double *) malloc((N+M+1)*sizeof(double)); assert(model_dens);
     kernel = (double *) malloc((D+1)*sizeof(double)); assert(kernel);
     
     // Kernel array
     ndata = gaussk(kernel, D, stepd, bandwidth);
     
     // Read all input data
+    fprintf(stdout, "Read");
     ndata = readcat(process, in_data_file, N, M);
     
     // Jitter
+    fprintf(stdout, "Jitter");
     ndata = jitter(process, Ujitter, N, M, bandwidth);
     
     // Compute density field for residuals
+    fprintf(stdout, "Density");
     ndata = density(process, Ujitter, 5, 6, model_dens, kernel, stepd, bandwidth, N, M);
 
     // Write residuals density field
@@ -322,6 +327,7 @@ int jitter(double **process, double **Ujitter, int N, int M, double w)
 //FUNCTION: 'density'
 int density(double **all, double **Ujitter, int col1, int col2, double *dens, double *kernel, double stepd, double r, int N, int M)
 {
+    fprintf(stdout, "Density");
     int i,j,factor, index;
     double stepx, stepy, stepz, a,b,c, d, d1,d2,d3, g,sum1,sum2, volumeunit, term;
     stepx = (window[2]-window[1])/grid[1];
@@ -336,13 +342,15 @@ int density(double **all, double **Ujitter, int col1, int col2, double *dens, do
     }
     
     //First of all, set counts to zero
-    for(i=1; i<=M; i++){
+    for(i=1; i<=M+N; i++){
         dens[i] = 0;
     }
-    
+    fprintf(stdout, "%d %d \n", N, M);
     //Start loop over grid locations
-    for(i=1;i<=M;i++)
+    for(i=1;i<=M;i++)  // Mdfy: i=M;i<=M+N;i++; i=i-N
     {
+//        fprintf(stdout, "Loop %d %d %d\n", i, N, M);
+//        i=i-N;
         //Tell people what we are doing
         if(Verbose && (i%factor==0)){
             fprintf(stdout, "  Doing density field calculations. Now working in location %d of %d...\n", i, M);
@@ -375,7 +383,8 @@ int density(double **all, double **Ujitter, int col1, int col2, double *dens, do
             sum1 = sum1 + term;
             sum2 = sum2 + term*all[j][col2];
         }
-        dens[i] = sum2/sum1;
+        dens[N+i] = sum2/sum1;
+        fprintf(stdout, "%g  %g  %g  %g\n", a, b, c, dens[N+i]);
     }
     return i;
 }
@@ -406,7 +415,7 @@ int write_fields(double **all, double *dens, int N, int M, char *filename)
     
     for(i=1;i<=M;i++)
     {
-        fprintf(fout, "%g  %g  %g  %g\n", all[N+i][1], all[N+i][2], all[N+i][3], dens[i]);
+        fprintf(fout, "%g  %g  %g  %g\n", all[N+i][1], all[N+i][2], all[N+i][3], dens[N+i]);
     }
     fclose(fout);
     if(Verbose){

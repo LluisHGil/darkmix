@@ -114,7 +114,7 @@ However, the resulting parameters are still far from the best fit. Repeat the pr
 Visiualize again to see the new model:
 
 ```{r, message=FALSE}
-arg = list(mar=c(0,0,0,0), clust=clust, col=2, pch=16,border=2, cex=0.5, cexl=2, lwd=2)
+arg = list(mar=c(3,3,0,0), clust=clust, col=2, pch=16,border=2, cex=0.5, cexl=2, lwd=2)
 out <- mixture.model(param, param2, output = NULL, action.draw,arg)
 ```
 

@@ -48,6 +48,7 @@
 #    mask.adjust_radii
 #    mask.adjust_sersic
 #    mask.adjust_mix
+#    mask.adjust_shape
 #    AIC.BIC
 #    goodness
 #    residuals.lambda
@@ -176,7 +177,7 @@ centers <- function(clust, h=1, ntile = c(32,32,32), nk) {
   epsz2 <- zlong/(2*ntile[3])
   lims <- c(window$xrange[1]+epsx2, window$xrange[2]-epsx2, window$yrange[1]+epsy2, window$yrange[2]-epsy2, window$zrange[1]+epsz2, window$zrange[2]-epsz2)
   dens <-  kde3d(clust$data$x, clust$data$y, clust$data$z, h=h, n=ntile, lims=lims)
-  
+
   T <- prod(ntile)
   dens.mat <- matrix(NA,T,4)
   mode <- matrix(0,1,4)
@@ -242,7 +243,7 @@ param2profile <-function(param){
 # 
 profile2param <-function(profile) {
   param <- c(t(as.matrix(profile[[1]])))
-  if (param[6] != 0.0) {print("Error!")}
+  if (param[6] != 0.0) {print("Error! The first mixture coefficent is not zero")}
   param <- param[-6]
   return(c(param,profile[[2]]))
 }
@@ -336,7 +337,7 @@ action.control <- function(alert,i,par1,par2,n_param,n_models,p1,model,arg) {
   param_new=NULL
   if(i < n_models) {
     if(n_param > 0) { param_new=par1[1:n_param] }
-    if(outside.win(param_new, arg)) {alert=TRUE; print(paste("Center of halo", i, "is outside the window."))}
+    if(outside.win(param_new, arg$window)) {alert=TRUE; print(paste("Center of halo", i, "is outside the window."))}
     if(!is.na(param_new[4])){
       if(param_new[4] <= 0) {alert=TRUE; print(paste("Halo", i, "has negative radius:", param_new[4]))}
     }
@@ -365,8 +366,8 @@ action.prior <- function(logp,i,par1,par2,n_param,n_models,p1,model,arg) {
     lpx = dnorm(param_new[1], 0, 1000, log=TRUE)
     lpy = dnorm(param_new[2], 0, 1000, log=TRUE)
     lpz = dnorm(param_new[3], 0, 1000, log=TRUE)
-    lpr = dlnorm(param_new[4], 1,  5, log=TRUE)
-    lpn = dlnorm(param_new[5],2.5, 5, log=TRUE)
+    lpr = dnorm(param_new[4], 1, 1000, log=TRUE)  # dlnorm(param_new[4], 1.5, 100, log=TRUE)
+    lpn = dnorm(param_new[5], 3, 1000, log=TRUE)  # dlnorm(param_new[5], 2.5, 100, log=TRUE)
     logp[p1:(p1+n_param-1)] <- c(lpx,lpy,lpz,lpr,lpn)
     
     if (i > 1) {
@@ -396,7 +397,7 @@ action.prior <- function(logp,i,par1,par2,n_param,n_models,p1,model,arg) {
 action.draw <- function(output=NULL,i,par1,par2,n_param,n_models,p1,model,arg) {
   if(i == 1) {
     par(mar=arg$mar)
-    plot(arg$clust$data$x,arg$clust$data$y,cex=arg$cex,pch=arg$pch)	}
+    plot(arg$clust$data$x,arg$clust$data$y,cex=arg$cex,pch=arg$pch,axes=TRUE,cex.lab=2,cex.axis=2,xlab=expression(paste("h"^-1, " Mpc", sep="")), ylab=expression(paste("h"^-1, " Mpc", sep="")))	}
   param_new=NULL
   if (n_param > 0) { param_new=par1[1:n_param] }
   if (!is.null(param_new)) {
@@ -453,29 +454,29 @@ action.pop <- function(pop,i,par1,par2,n_param,n_models,p1,model,arg) {
 #        arg <- list(x1 = data[,1], y1 = data[,2], z1 = data[,3]))
 #
 mixture.model <- function(param=param,param2=param2,output=NULL,action,arg) {
-  n_models <- param2[[1]]
-  p1 <- 1
-  p2 <- 2
-  n1 <- length(param)
-  n2 <- length(param2)
-
-  i <- 1
-  while (i < n_models+1) {
-    
-    par1 <- param[p1:n1]
-    par2 <- param2[p2:n2]
-    model <- par2[[1]]
-    n_param <- par2[[2]]
-    
-    output <- action(output,i,par1,par2,n_param,n_models,p1,model, arg)
-    
-    p2 <- p2 + 2
-    if (i > 1) { p1 <- p1 + 1}
-    p1 <- p1 + n_param
-    i <- i+1
-    
-  }
-  output
+    n_models <- param2[[1]]
+    p1 <- 1
+    p2 <- 2
+    n1 <- length(param)
+    n2 <- length(param2)
+  
+    i <- 1
+    while (i < n_models+1) {
+      
+      par1 <- param[p1:n1]
+      par2 <- param2[p2:n2]
+      model <- par2[[1]]
+      n_param <- par2[[2]]
+      
+      output <- action(output,i,par1,par2,n_param,n_models,p1,model,arg)
+      
+      p2 <- p2 + 2
+      if (i > 1) { p1 <- p1 + 1}
+      p1 <- p1 + n_param
+      i <- i+1
+      
+    }
+    output
 }
 
 #
@@ -489,12 +490,24 @@ mixture.model <- function(param=param,param2=param2,output=NULL,action,arg) {
 # This function is a 3D version of function model.lik from Kuhn et al. 2014.
 # Usage> -model.lik(param,param2=param2,clust=clust,quad)
 #
-model.lik <- function(param,param2=param2,model,clust=clust,quad) {
-    norm <- int.model(param, param2, quad, model)   
+model.lik <- function(param,param2=param2,model,clust=clust,quad,all) {
     n <- length(clust$data$x)
-    arg = list(x1=clust$data$x,y1=clust$data$y,z1=clust$data$z)
+    arg = list(x1=clust$data$x,y1=clust$data$y,z1=clust$data$z,window=clust$domain)
     output=NULL
-    result <- sum(log(model(param=param,param2=param2,output,action.multi,arg)/norm*n))-n
+    if(all==TRUE) {
+      alert <- mixture.model(param,param2,output,action.control,arg)
+    }
+    else {alert <- FALSE}
+    if(alert == TRUE) {
+      # a <- param2profile(param)
+      result <- Inf
+    }
+    else {
+      norm <- int.model(param, param2, quad, model)  
+      lprior <- model(param, param2, output=c(), action.prior, arg)
+      result <- sum(log(model(param=param,param2=param2,output,action.multi,arg)/norm*n))-n
+      result <- result # + sum(lprior)
+    }
     -result
 }
 
@@ -509,7 +522,7 @@ model.lik <- function(param,param2=param2,model,clust=clust,quad) {
 #        param2=c(2,einasto.model,5,einasto.model,5),quad=quad)
 int.model <- function(param, param2, quad, model) {
 	eps <- quad$data$z[2] - quad$data$z[1]
-	arg = list(x1=quad$data$x,y1=quad$data$y,z1=quad$data$z)
+	arg = list(x1=quad$data$x,y1=quad$data$y,z1=quad$data$z,window=quad$domain)
 	output <- c()
 	eval <- model(param, param2, output, action.multi, arg)
 	norm <- sum(eval*eps*eps*eps)
@@ -528,8 +541,8 @@ int.model <- function(param, param2, quad, model) {
 mask.freeze <- function(param_input,param2,mask,clust=clust,quad=quad) {
   ind_masked <- which(mask == 0)
   ind_unmasked <- which(mask == 1)
-  ocf <- optim(param_input[ind_unmasked], model.lik, param2=c(param_input[ind_masked],ind_masked), model=mask.model, clust=clust, quad=quad)
   param_out <- param_input
+  ocf <- optim(param_input[ind_unmasked], model.lik, param2=c(param_input[ind_masked],ind_masked), model=mask.model, clust=clust, quad=quad, all=FALSE)
   param_out[ind_unmasked] <- ocf$par
   param_out
 }
@@ -545,7 +558,7 @@ mask.freeze <- function(param_input,param2,mask,clust=clust,quad=quad) {
 # 
 #mask.model <- function(x1,y1,z1,param=NULL,param2=param2) {
 mask.model <- function(param,param2=param2, output=NULL, action, arg) {
-	
+
   n_masked <- length(param2)/2
   n_unmasked <- length(param)
   n_par <- n_masked + n_unmasked
@@ -563,7 +576,14 @@ mask.model <- function(param,param2=param2, output=NULL, action, arg) {
   param_models <- c(n+1) # k+1
   for (i in 1:n) { param_models=c(param_models,einasto.model,5) } # c(k+1,profile,v)
   param_models <- c(param_models,const.model,0) # c(k+1,profile,v,const profile, 0)
-  mixture.model(param=param_input,param2=param_models,output,action.multi,arg)
+  alert <- mixture.model(param_input,param_models,output,action.control,arg)
+  if(alert == FALSE) {
+    out <- mixture.model(param=param_input,param2=param_models,output,action.multi,arg)
+  }
+  else {
+    out <- output
+  }
+  out
 }
 
 # 
@@ -649,12 +669,34 @@ mask.adjust_sersic <- function(k,v) {
 mask.adjust_mix <- function(k,v) {
 
   mask <- rep(0,(v+1)*k)
-  mask[5] <- 1
+  # mask[6] <- 1
   if (k > 1) {
      inds <- 5+(1:(k-1))*(v+1)
      mask[inds] <- 1
   }
   mask[(v+1)*k] <- 1
+  mask
+}
+
+# mask.adjust_shape (creats an array of 1s and 0s for freezeing and thawing parameters in mask.freeze)
+#
+# The input is an integer "n" corresponding to the number of ellipsoids in a finite mixture model described by the 
+# "param2" variable c(<n+1>,model.ell,5, ... , model.ell,5,model.const,0).
+# The output is an array of 1s and 0s with length 6*n. Core radius and axis ratio parameters are thawed.
+# Usage> param <- mask.freeze(param,mask.adjust_positions(n),clust=clust)
+# 
+mask.adjust_shape <- function(k,v) {
+  mask <- rep(0,(v+1)*k)
+  mask[4] <- 1
+  mask[5] <- 1
+  if (k > 1) {
+    indsre <- 3+(1:(k-1))*(v+1)
+    indsn <- 4+(1:(k-1))*(v+1)
+    indsmix <- 5+(1:(k-1))*(v+1)
+    mask[indsre] <- 1
+    mask[indsn] <- 1
+    mask[indsmix] <- 1
+  }
   mask
 }
 
@@ -669,7 +711,7 @@ mask.adjust_mix <- function(k,v) {
 AIC.BIC <- function(param,param2,clust,quad)
 {
   N <- length(clust$data$x)
-  L <- -model.lik(param, param2, mixture.model, clust, quad);
+  L <- -model.lik(param, param2, mixture.model, clust, quad, all=TRUE);
   AIC <- -2*L + length(param)*2.0; 
   BIC <- -2*L + log(N)*length(param)
   print(paste("Maximum log-likelihood:", L))
@@ -775,7 +817,7 @@ residuals.lambda <- function(N,M,param,param2,quad.residuals,residual.type="raw"
   weightfactor = NULL; skip.border = FALSE
   
   Q <- voro[,2:4]
-  want.trend <- !is.null(trend) && !identical.formulae(trend,~1)
+  want.trend <- !is.null(trend)  # && !identical.formulae(trend,~1)
   want.inter <- !is.null(interaction) && !is.null(interaction$family)
   trend.formula <- trend
   computed <- list()
@@ -1180,12 +1222,15 @@ american.colors <- function(n) {
 # There is no output. This function plots an image or stores it.
 # Usage> plot.dens(R,clust, col.plot="color",scale="lin",proj.var="X", window, symmetry=TRUE, w=880, h=880, name="figure")
 #
-plot.dens <- function(R,clust=clust,col.plot="gray",col.point = 1, scale="lin",proj.var="Z", window=clust$domain, symmetry=TRUE, print=FALSE, print.data=FALSE, w = 880, h = 880, name="density.png")
+plot.dens <- function(R,clust=clust,col.plot="gray",col.point = 1, scale="lin",proj.var="Z", window=clust$domain, symmetry=TRUE, print=FALSE, print.data=FALSE, title='Data', w = 880, h = 880, name="density.png")
 {
 	#X <- clust$data
 	image <- image.3D(R,proj.var, window)
 	ima <- image[[1]]
+#	ima <- ima / max(ima)
 	R.ima <- image[[2]]
+#	R.ima <- R.ima / max(R.ima)
+
 	if(proj.var=="Z") {X <- as.matrix(cbind(clust$data$x, clust$data$y))}
 	if(proj.var=="Y") {X <- as.matrix(cbind(clust$data$x, clust$data$z))}
 	if(proj.var=="X") {X <- as.matrix(cbind(clust$data$y, clust$data$z))}
@@ -1208,7 +1253,12 @@ plot.dens <- function(R,clust=clust,col.plot="gray",col.point = 1, scale="lin",p
 	  ddmin <- min(R.ima);
 	}
 	if(print==TRUE) {png(name, width = w, height = h)}
-	plot(ima,main='',box=FALSE,col=col.scale,zlim=c(ddmin,ddmax),ribsep=0.02,ribside='right',ribargs=,cex.axis=2)
+	plot(ima,main='',box=TRUE,col=col.scale,zlim=c(ddmin,ddmax),ribsep=0.02,ribside='right',ribargs=,cex.axis=2,axes=TRUE)
+	title(title,cex.main=3)
+	# mtext(text = "Particle density", side = 4, line = 1, cex=2)
+	#,xlab=expression(paste("h"^-1, " Mpc", sep="")),ylab=expression(paste("h"^-1, " Mpc", sep="")))
+	mtext(expression(paste("h"^-1, " Mpc", sep="")), side=1, line=1.5, at=31, cex=2)
+	mtext(expression(paste("h"^-1, " Mpc", sep="")), side=2, line=0.5, at=184, cex=2)
 	if(print.data==TRUE) {points(X[,1], X[,2], pch=20,cex=0.2, col=col.point)}
 	if(print==TRUE) {dev.off();}
 }
@@ -1228,7 +1278,7 @@ plot.dens <- function(R,clust=clust,col.plot="gray",col.point = 1, scale="lin",p
 # No output is produced, different plots are made and stored when indicated.
 # Usage> plot.mm3d(param, param2, clust, quad.residuals, "raw", bandwidth=1, epsilon=0.01, maps=c("s", "e", "d", "m"), fast, col.point=1, scale="lin", proj.var="Z", print=FALSE, w = 880, h = 880)
 #
-plot.mm3d <- function(param, param2, clust, quad.residuals, residual.type="raw", bandwidth=1, maps = c("s", "e", "d", "m"), fast=TRUE, col.point=1, scale="lin", proj.var="Z", print=TRUE, print.data=FALSE, w = 880, h = 880) {# ntile
+plot.mm3d <- function(param, param2, clust, quad.residuals, residual.type="raw", bandwidth=1, maps = c("s", "e", "d", "m"), fast=TRUE, col.point=1, scale="lin", proj.var="Z", print=TRUE, print.data=FALSE, w = 880, h = 880, ntile) {# ntile
   
   # Voronoi tesselation
   N <- length(clust$data$x);
@@ -1263,7 +1313,7 @@ plot.mm3d <- function(param, param2, clust, quad.residuals, residual.type="raw",
     # Plot
     smooth.absolute <- read.table("residuals_smoothed.txt") # s(r)
     name <- "absolute_errors3d.png"
-    plot.dens(smooth.absolute,clust, col.plot="color", col.point,scale,proj.var, window, symmetry=TRUE, print, print.data, w, h, name) # Abs errors
+    plot.dens(smooth.absolute,clust, col.plot="color", col.point,scale,proj.var, window, symmetry=TRUE, print, print.data, title='Smoothed raw residuals', w, h, name) # Abs errors
   }
 
   # Relative errors
@@ -1288,7 +1338,7 @@ plot.mm3d <- function(param, param2, clust, quad.residuals, residual.type="raw",
     smooth.relative[,4] <- smooth.absolute[,4]/smooth.dummy[,4]
     write.table(smooth.relative, file="relative_smoothed.txt", col.names=FALSE, row.names=FALSE)
     name <- "relative_errors3d.png"
-    plot.dens(smooth.relative,clust, col.plot="color", col.point, scale,proj.var, window, symmetry=TRUE, print, print.data, w, h, name)
+    plot.dens(smooth.relative,clust, col.plot="color", col.point, scale,proj.var, window, symmetry=TRUE, print, print.data, title='Relative residuals', w, h, name)
   }
 
   # Data density
@@ -1299,7 +1349,7 @@ plot.mm3d <- function(param, param2, clust, quad.residuals, residual.type="raw",
     }
     smooth.data <- read.table("data_smoothed.txt")
     name <- "data_density3d.png"
-    plot.dens(smooth.data,clust, col.plot="gray", col.point, scale, proj.var, window, symmetry=FALSE, print, print.data, w, h, name)
+    plot.dens(smooth.data,clust, col.plot="gray", col.point, scale, proj.var, window, symmetry=FALSE, print, print.data, title = 'Data density distribution', w, h, name)
   }
 
   # Model density
@@ -1310,7 +1360,7 @@ plot.mm3d <- function(param, param2, clust, quad.residuals, residual.type="raw",
     }
     smooth.dummy <- read.table("dummy_smoothed.txt")
     name <- "model_density3d.png"
-    plot.dens(smooth.dummy, clust, col.plot="gray", col.point, scale, proj.var, window, symmetry=FALSE, print, print.data, w, h, name)
+    plot.dens(smooth.dummy, clust, col.plot="gray", col.point, scale, proj.var, window, symmetry=FALSE, print, print.data, title='Model density distribution', w, h, name)
   }
 }
 
@@ -1723,15 +1773,19 @@ plot.profile <- function(param, param2, clust, comp, xlim=c(0.1, 40), nbin=60, m
   # Plot
   main <- paste('Component', toString(comp))
   miny <- min(mm.pro[,2]); maxy <- max(c(emp.pro[,2], comp.pro[,2], mm.pro[,2]))
-  #png("Profile_xy_3D.png", width=880, height=880)
-  #par(mar=c(5,5,3,0))
-  plot(emp.pro[,1], emp.pro[,2], cex=1, pch=16, log="xy", ylim=c(miny, maxy), type="b", xlab="r Mpc/h", ylab="Density", main=main) #, cex.lab=3, cex.axis=3, cex.main=3)
-  lines(comp.pro[,1], comp.pro[,2], lwd=2, col=2)
-  lines(mm.pro[,1], mm.pro[,2], lwd=2, col=3)
+  png("Profile_xy_3D.png", width=880, height=880)
+  par(mar=c(6,7,3,0))
+  plot(emp.pro[,1], emp.pro[,2], cex=3, pch=16, log="xy", ylim=c(miny, maxy), 
+       type="b",xlab="", ylab="", main=main, cex.axis=3, cex.main=3)
+  title(xlab=expression(paste("h"^-1, " Mpc", sep="")), line=4, cex.lab=3)
+  title(ylab="Particle number density", line=4, cex.lab=3)
+  lines(comp.pro[,1], comp.pro[,2], lwd=4, col=2)
+  lines(mm.pro[,1], mm.pro[,2], lwd=4, col=3)
   if(flag.legend==TRUE) {
-  legend("topright", legend=c("Observed profile", "One component profile", "Mixture model profile"),
-         col=c("black", "red", "green"), lty=1:2, lwd=2, cex=1)}
-  #dev.off()
+  legend("topright", legend=c("Observed profile", "One component profile", 
+                              "Mixture model profile"),
+         col=c("black", "red", "green"), lty=1:2, lwd=2, cex=3)}
+  dev.off()
   profiles <- as.data.frame(cbind(emp.pro, comp.pro[,2], mm.pro[,2])) 
   colnames(profiles) <- c("r", "Empyrical", "Individual", "Mixture")
   return(profiles)
@@ -1861,10 +1915,11 @@ membership <- function(param, param2, model, clust, threshold=0, ci=FALSE, sigma
                  marks=ret$class) 
   colmap <- colourmap(rainbow((5+k)), inputs=1:(5+k))
   sy <- symbolmap(pch=21, bg=colmap, inputs=1:(5+k), cex=2, nsymbols=(5+k))
-  plot(clust2d, symap=sy, legend=TRUE, main="", leg.args=list(cex=2, cexl=2))
+  plot(clust2d, symap=sy, legend=FALSE, main="", leg.args=list(cex=2, cexl=2))
+  axis(1)
+  axis(2)
   if(print==TRUE){dev.off()}
   
   return(list(ret,sigma_sam))
 }  
-
 
