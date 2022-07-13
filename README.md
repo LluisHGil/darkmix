@@ -11,7 +11,7 @@ In folder Code one can found the following files:
 - `kernel_absolute_residuals.cpp`: C++ code for the residuals kernel density estimation. Not meant to be used directly by the user.
 - `kernel_fourier_residuals.cpp`: fast C++ code for the residuals kernel density estimation. Not meant to be used directly by the user. Requires the installation of the [FFTW library](http://www.fftw.org/) (see below). 
 
-In folder Data one can found the following files:
+In folder Data, one can found the following files:
 
 - `datacat.txt`: data set containing the coordinates of 2081 dark matter particles from [Bolshoi](https://www.cosmosim.org/cms/documentation/projects/multidark-bolshoi-project/) simulation (Spanish MultiDark Consolider project). Used in the `darkmix_steps.R` example code.
 - `halocat.txt`: catalog of halos found by the [BDM algorithm](https://www.cosmosim.org/cms/documentation/database-structure/tables/bdm/) in our region of interest.
