@@ -1,0 +1,16 @@
+build/
+*~
+kernel_absolute_residuals
+kernel_fourier_residuals
+kernel_lambda
+unionquad.*
+data_smoothed.*
+dummy_smoothed.*
+relative_smoothed.*
+residuals_lambda.*
+residuals_smoothed.*
+.DS_Store
+.R*
+.ipynb_checkpoints
+
+
