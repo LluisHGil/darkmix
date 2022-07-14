@@ -10,6 +10,8 @@ LIBS =
 LIBS_FFTW = -lfftw3 -lm
 
 CFLAGS = -Wall -O3
+CFLAGS_OPENMP = -fopenmp
+
 
 .SUFFIXES: .o .c .h
 
@@ -28,7 +30,7 @@ all: $(FILES)
 
 kernel_lambda: kernel_lambda.cpp $(OBJ)
 	@echo "Compiling kernel_lambda"
-	$(CC) $(CFLAGS) kernel_lambda.cpp -o kernel_lambda $(OBJ) $(LIBS)
+	$(CC) $(CFLAGS) $(CFLAGS_OPENMP) kernel_lambda.cpp -o kernel_lambda $(OBJ) $(LIBS)
 	@echo "Done"
 
 kernel_absolute_residuals: kernel_absolute_residuals.cpp $(OBJ)
@@ -46,5 +48,3 @@ clean:
 
 cleanall:
 	@rm -f *~ "#*" *.o kernel_lambda kernel_absolute_residuals kernel_fourier_residuals
-
-	

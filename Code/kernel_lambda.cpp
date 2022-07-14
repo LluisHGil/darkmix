@@ -352,11 +352,13 @@ int density(double **all, double **Ujitter, int col1, int col2, double *dens, do
         dens[i] = 0;
     }
     fprintf(stdout, "%d %d \n", N, M);
+
     //Start loop over grid locations
+#pragma omp parallel for private(i, a, b, c, sum1, sum2, j, d1, d2, d3, d, index, term) \
+      shared(M, dens, Verbose, factor, all, N, Ujitter, stepd, kernel, col1, col2, volumeunit)
     for(i=1;i<=M;i++)  // Mdfy: i=M;i<=M+N;i++; i=i-N
     {
-//        fprintf(stdout, "Loop %d %d %d\n", i, N, M);
-//        i=i-N;
+
         //Tell people what we are doing
         if(Verbose && (i%factor==0)){
             fprintf(stdout, "  Doing density field calculations. Now working in location %d of %d...\n", i, M);
