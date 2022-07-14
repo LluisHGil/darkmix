@@ -14,3 +14,7 @@ residuals_smoothed.*
 .ipynb_checkpoints
 
 
+.Rproj.user
+*.Rproj
+darkmix_steps_files
+
