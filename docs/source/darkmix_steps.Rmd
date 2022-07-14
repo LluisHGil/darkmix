@@ -10,20 +10,10 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-March 29, 2020
+In this notebook we reproduce the example presented in section 7 of the publication:
+Ll. Hurtado-Gil et al., *Darkmix: Mixture Models for Detection and Characterization of Dark Matter Halos*, submitted to ApJ
 
-## Mixture Models for detection and characterization of Dark Matter halos
-
-Authors: Lluís Hurtado-Gil, Michael A. Kuhn, Pablo Arnalte-Mur, Eric D. Feigelson, Vicent J. Martínez
-
-In this notebook we reproduce the example presented in section 7 of publication Hurtado-Gil et al. in prep.
-
-Requirements:
-
-* R version 3.5.2 (2018-12-20) -- "Eggshell Igloo" on Macintosh (or later)
-* FFTW 3.3.8 (http://www.fftw.org)
-* voro++ 0.4.6 (http://math.lbl.gov/voro++/)
-* Compile C++ functions in Code folder as explained in the GitHub repository
+For the requirements and installation instructions, see the [documentation](https://darkmix.readthedocs.io/).
 
 Used R packages and functions:
 
@@ -34,12 +24,12 @@ Used R packages and functions:
 * `misc3d`: `kde3d`
 * `Base R`: multiple functions (in particular the function `optim`)
 
-### Step 1 -- Setup
+## Step 1 -- Setup
 
 Load the necessary functions and packages.
 
 ```{r, message=FALSE}
-source("Code/darkmix.R")
+source("../../Code/darkmix.R")
 library(spatstat)
 library(spatstat.utils)
 library(expint)
@@ -51,7 +41,7 @@ library(LaplacesDemon)
 Read the data set to create the point process object and its quadrature: 
 
 ```{r}
-data <- read.table("Data/datacat.txt")
+data <- read.table("../../Data/datacat.txt")
 minx <- 18; maxx <- 43; 
 miny <- 171; maxy <- 196; 
 minz <- 95; maxz <- 102;
@@ -69,9 +59,9 @@ v <- 5
 param2 <-c(k+1,rep(c(einasto.model,v),k), const.model,0)
 ```
 
-### Step 2 -- Initial guess
+## Step 2 -- Initial guess
 
-Initialize the parameters vector and generate an initial guess of the clusters centers:
+Initialize the parameters vector and generate an initial guess of the cluster centers:
 
 ```{r}
 param <- rep(0,k*(v+1))
@@ -88,18 +78,18 @@ arg = list(mar=c(0,0,0,0), clust=clust, col=2, pch=16,border=2, cex=0.5, cexl=2,
 out <- mixture.model(param, param2, output = NULL, action.draw, arg)
 ```
 
-### Step 3 -- Likelihood maximization 
+## Step 3 -- Likelihood maximization 
 
-Optimize the parameters via Nelder-Mead algorithm. Save the result.
+Optimize the parameters via the Nelder-Mead algorithm, and save the result.
 
 ```{r}
 ocf <- optim(param, model.lik, param2=param2, model=mixture.model, clust=clust, quad=quad, all=FALSE); 
 param <- ocf$par
 ```
 
-For further model refinement use the `mask.freeze` functions.
+For further model refinement we can use the `mask.freeze` functions.
 
-```{r, message=FALSE}
+```{r, message=FALSE, include=FALSE}
 param <- mask.freeze(param, param2, mask.adjust_positions(k,v), clust, quad)
 param <- mask.freeze(param, param2, mask.adjust_radii(k,v), clust, quad)
 param <- mask.freeze(param, param2, mask.adjust_sersic(k,v), clust, quad)
@@ -112,7 +102,9 @@ The maximum likelihood, AIC and BIC can be calculated with
 aic_bic <- AIC.BIC(param, param2, clust, quad)
 ```
 
-However, the resulting parameters are still far from the best fit. Repeat the previous steps to obtain better results. In the following steps we present the results with the already obtained fit.
+However, the resulting parameters are still far from the best fit.
+Repeat the previous steps to obtain better results. 
+In the following steps we present the results with the already obtained fit.
 
 Visualize again to see the new model:
 
@@ -121,7 +113,7 @@ arg = list(mar=c(3,3,0,0), clust=clust, col=2, pch=16,border=2, cex=0.5, cexl=2,
 out <- mixture.model(param, param2, output = NULL, action.draw,arg)
 ```
 
-If the model is trusted, use it estimate the number of particles per cluster:
+When the model is trusted, we can use it to estimate the number of particles per cluster:
 
 ```{r}
 arg <- list(clust=clust, quad=quad)
@@ -129,15 +121,16 @@ pop <- mixture.model(param,param2,output=c(), action.pop, arg)
 pop
 ```
 
-### Step 4 -- Goodness of fit
+## Step 4 -- Goodness of fit
 
-The goodness of fit can be evaluated with function `goodness` (calculation might take several minutes).
+The goodness of fit can be evaluated with the function `goodness` (calculation might take several minutes).
 
 ```{r}
 goodness(param, param2, clust, quad, ntile, residual.type="raw", bandwidth=1)
 ```
 
-The different kernel density fields can be generated at once. By order of appearance: absolute residuals, relative residuals, data density field and model density field.
+The different kernel density fields can be generated at once. 
+By order of appearance: absolute residuals, relative residuals, data density field and model density field.
 
 ```{r, message=FALSE}
 maps <- c("s", "e", "d", "m") 
@@ -164,7 +157,8 @@ Visualize the new sample with
 plot(data_generated)
 ```
 
-We can visualize as well the empirical density profile as centered in a given component together with the full model and the single component estimations. For example, for component 4:
+We can visualize as well the empirical density profile centered in a given component together with the full model and the single component estimations. 
+For example, for component 4:
 
 ```{r}
 comp <- 4
