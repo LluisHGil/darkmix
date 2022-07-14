@@ -4,19 +4,19 @@
  Creation date: 01/06/2019
  Last modified: 19/08/2019
  Version: 0.1
- 
+
  Program to compute in the simplest way the kernel smoothed distribution
  of an estimated density model of a fitted three dimensional point process.
- 
+
  We will need as input the data and dummy points together with the residuals,
  the voronoi weights and the Sigma distribution value at each location. The
  parameters defining the calculation (definition of window geometry) are also required.
- 
+
  Compilation:
  g++ -o kernel_lambda kernel_lambda.cpp
 
  Version history:
- 
+
  V. 0.1 (16/11/2019): Initial version.
  **********************************************/
 
@@ -27,7 +27,7 @@
 #include <time.h>
 #include <fstream>
 #include <iomanip>
-#include <iostream> 
+#include <iostream>
 #include <fstream>
 #include <string>
 #include <stdlib.h>
@@ -61,9 +61,15 @@ int jitter(double **, double **, int, int, double);
 /* MAIN FUNCTION */
 int main(int argc, char ** argv)
 {
+
+    //Set the output buffers to avoid buffering
+    //(so we can follow easier the development of the program)
+    setvbuf(stdout, NULL, _IOLBF, 1024);
+    setvbuf(stderr, NULL, _IOLBF, 1024);
+
     std::cout << std::fixed;
     std::cout << std::setprecision(15);
-    
+
     // Define defaults
     Verbose = 1;
     strcpy(in_data_file, "residuals_smoothed.txt");
@@ -78,23 +84,23 @@ int main(int argc, char ** argv)
     window[5] = 0; window[6] = 1;
 
     get_args(argc, argv);
-    
+
     //Read arguments:
-    
+
     /* Variable declaration */
     int i,j,ndata,D;
     double diagonal,stepd;
-    
+
     // Values where the gaussian kernel is calculated
     diagonal = ceil(sqrt(pow(window[6]-window[5],2) + pow(window[4]-window[3],2) + pow(window[2]-window[1],2)));
     stepd = 0.001;
     D = diagonal/stepd;
-    
+
     //Data and Dummy points plus residuals, voronoi weights and Sigma density function
     double **process, **Ujitter;
-    
+
     fprintf(stdout, "Vales %d %d \n", N, M);
-    
+
     process  = (double **) malloc((N+M+1)*sizeof(double)); assert(process); //Read all
     Ujitter  = (double **) malloc((N+M+1)*sizeof(double)); assert(Ujitter); //Read all
     // input:   x    y   z   r   voro   sigma
@@ -123,21 +129,21 @@ int main(int argc, char ** argv)
 
     // Arrays for kernel density and residuals density field
     double *kernel, *model_dens;
-    
+
     model_dens = (double *) malloc((N+M+1)*sizeof(double)); assert(model_dens);
     kernel = (double *) malloc((D+1)*sizeof(double)); assert(kernel);
-    
+
     // Kernel array
     ndata = gaussk(kernel, D, stepd, bandwidth);
-    
+
     // Read all input data
     fprintf(stdout, "Read");
     ndata = readcat(process, in_data_file, N, M);
-    
+
     // Jitter
     fprintf(stdout, "Jitter");
     ndata = jitter(process, Ujitter, N, M, bandwidth);
-    
+
     // Compute density field for residuals
     fprintf(stdout, "Density");
     ndata = density(process, Ujitter, 5, 6, model_dens, kernel, stepd, bandwidth, N, M);
@@ -154,18 +160,18 @@ static void usage(char **argv)
     /* This functions explains the usage of the program
      (basically, how to pass the different arguments)
      */
-    
+
     fprintf(stderr, "Usage: %s options  outprefix\n\n", argv[0]);
     fprintf(stderr, "   where options = \n\n");
-    
+
     fprintf(stderr, "   -i Residuals file name\n");
     fprintf(stderr, "    Name of the file containing the residuals.\n");
     fprintf(stderr, "    The file should contain 6 columns: X, Y, Z (arbitrary units, as long as consistent), Residuals, Voronoi weights and Sigma values.\n");
     fprintf(stderr, "    Default is %s.\n\n", in_data_file);
-    
+
     fprintf(stderr, "   -n\n");
     fprintf(stderr, "    Number of data points.\n");
-    
+
     fprintf(stderr, "   -m\n");
     fprintf(stderr, "    Number of dummy points.\n");
 
@@ -177,10 +183,10 @@ static void usage(char **argv)
 
     fprintf(stderr, "   -b\n");
     fprintf(stderr, "    Used bandwidth.\n");
-    
+
     fprintf(stderr, "   -r\n");
     fprintf(stderr, "    Name of the output file.\n");
-    
+
     exit(-1);
 }
 
@@ -190,14 +196,14 @@ void get_args(int argc, char **argv)
     /* This functions reads the needed CL arguments into global variables.
      In case of problems, calls 'usage()'.
      */
-    
+
     int i,k,start;
-    
+
     //Only do something if there are arguments
     if(argc == 1){
         usage(argv);
     }
-    
+
     //Check for a switch
     //Start at i=1 to skip the command name
     for(i=1;i<argc;i++) {
@@ -207,13 +213,13 @@ void get_args(int argc, char **argv)
 
                 case 'i': strcpy(in_data_file, argv[++i]);
                     break;
-                    
+
                 case 'n': N = atoi(argv[++i]);
                     break;
-                    
+
                 case 'm': M = atoi(argv[++i]);
                     break;
-                    
+
                 case 'g':
                     k = 1; start=++i;
                     for (i=start; i < (start+3); ++i) {
@@ -222,7 +228,7 @@ void get_args(int argc, char **argv)
                     }
                     i = i - 1;
                     break;
-                    
+
                 case 'w':
                     k=1; start = ++i;
                     for (i=start; i < (start+6); ++i) {
@@ -231,16 +237,16 @@ void get_args(int argc, char **argv)
                     }
                     i = i - 1;
                     break;
-                    
+
                 case 'b': bandwidth = atof(argv[++i]);
                     break;
-                    
+
                 case 'r': strcpy(model_dens_file, argv[++i]);
                     break;
-                    
+
                 case '?': usage(argv);
                     break;
-                    
+
                 default: usage(argv);
                     break;
             }
@@ -256,7 +262,7 @@ int readcat(double **all, char *filename, int N, int M)
     char linestr[100];
     double x, y, z, r, w, s;
     fin = fopen(filename, "r"); assert(fin);
-    
+
     //Read lines in file one by one
     for(i=1;i<=N;i++) {
         //while(fgets(linestr, 100, fin)!=NULL){
@@ -296,7 +302,7 @@ int readcat(double **all, char *filename, int N, int M)
             all[N+i][6] = s;
         }
     }
-    
+
     if(Verbose){
         fprintf(stdout, "  Read %d points from catalogue %s\n", i-1, filename);
     }
@@ -334,13 +340,13 @@ int density(double **all, double **Ujitter, int col1, int col2, double *dens, do
     stepy = (window[4]-window[3])/grid[2];
     stepz = (window[6]-window[5])/grid[3];
     volumeunit = stepx*stepy*stepz;
-    
+
     if( M > 20 ){
         factor = M/10;
     }else{
         factor = 1;
     }
-    
+
     //First of all, set counts to zero
     for(i=1; i<=M+N; i++){
         dens[i] = 0;
@@ -355,7 +361,7 @@ int density(double **all, double **Ujitter, int col1, int col2, double *dens, do
         if(Verbose && (i%factor==0)){
             fprintf(stdout, "  Doing density field calculations. Now working in location %d of %d...\n", i, M);
         }
-        
+
         a = all[i+N][1];
         b = all[i+N][2];
         c = all[i+N][3];
@@ -384,7 +390,7 @@ int density(double **all, double **Ujitter, int col1, int col2, double *dens, do
             sum2 = sum2 + term*all[j][col2];
         }
         dens[N+i] = sum2/sum1;
-        fprintf(stdout, "%g  %g  %g  %g\n", a, b, c, dens[N+i]);
+//        fprintf(stdout, "%g  %g  %g  %g\n", a, b, c, dens[N+i]);
     }
     return i;
 }
@@ -394,7 +400,7 @@ double gaussk(double *kernel, int D, double stepd, double r)
 {
     int i;
     double x;
-    
+
     for(i=1;i<=D;i++)
     {
         x = i*stepd;
@@ -409,10 +415,10 @@ int write_fields(double **all, double *dens, int N, int M, char *filename)
     int i;
     FILE *fout;
     char outfile[95];
-    
+
     strcpy(outfile, filename);
     fout = fopen(outfile, "w"); assert(fout);
-    
+
     for(i=1;i<=M;i++)
     {
         fprintf(fout, "%g  %g  %g  %g\n", all[N+i][1], all[N+i][2], all[N+i][3], dens[N+i]);
