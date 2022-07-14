@@ -1,6 +1,9 @@
 ---
-title: "darkmix: steps"
-output: html_document
+title: "darkmix: example of execution"
+date: ""
+output: 
+  html_document:
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -13,7 +16,7 @@ March 29, 2020
 
 Authors: Lluís Hurtado-Gil, Michael A. Kuhn, Pablo Arnalte-Mur, Eric D. Feigelson, Vicent J. Martínez
 
-In this notebook we reproduce the example presented in section 6 of publication Hurtado-Gil et al. in prep.
+In this notebook we reproduce the example presented in section 7 of publication Hurtado-Gil et al. in prep.
 
 Requirements:
 
@@ -90,13 +93,13 @@ out <- mixture.model(param, param2, output = NULL, action.draw, arg)
 Optimize the parameters via Nelder-Mead algorithm. Save the result.
 
 ```{r}
-ocf <- optim(param, model.lik, param2=param2, model=mixture.model, clust=clust, quad=quad); 
+ocf <- optim(param, model.lik, param2=param2, model=mixture.model, clust=clust, quad=quad, all=FALSE); 
 param <- ocf$par
 ```
 
 For further model refinement use the `mask.freeze` functions.
 
-```{r}
+```{r, message=FALSE}
 param <- mask.freeze(param, param2, mask.adjust_positions(k,v), clust, quad)
 param <- mask.freeze(param, param2, mask.adjust_radii(k,v), clust, quad)
 param <- mask.freeze(param, param2, mask.adjust_sersic(k,v), clust, quad)
@@ -111,7 +114,7 @@ aic_bic <- AIC.BIC(param, param2, clust, quad)
 
 However, the resulting parameters are still far from the best fit. Repeat the previous steps to obtain better results. In the following steps we present the results with the already obtained fit.
 
-Visiualize again to see the new model:
+Visualize again to see the new model:
 
 ```{r, message=FALSE}
 arg = list(mar=c(3,3,0,0), clust=clust, col=2, pch=16,border=2, cex=0.5, cexl=2, lwd=2)
@@ -138,7 +141,7 @@ The different kernel density fields can be generated at once. By order of appear
 
 ```{r, message=FALSE}
 maps <- c("s", "e", "d", "m") 
-plot.mm3d(param, param2, clust, quad, residual.type="raw", bandwidth=1, maps=maps, fast=TRUE, col.point=1, scale="log", proj.var="Z", print=FALSE, print.data=TRUE, w=880, h=880) 
+plot.mm3d(param, param2, clust, quad, residual.type="raw", bandwidth=1, maps=maps, fast=TRUE, col.point=1, scale="log", proj.var="Z", print=FALSE, print.data=TRUE, w=880, h=880, ntile=ntile) 
 ```
 
 The membership of each particle to the clusters can be obtained and plotted as follows:
@@ -168,13 +171,4 @@ comp <- 4
 profiles <- plot.profile(param, param2, clust, comp, xlim=c(0.1,40), nbin=60, flag.legend=TRUE)
 ```
 
-### Step 5 -- New model
 
-Although we do not execute these functions here, we include the necessary calls for the MCMC routines:
-
-```{r, eval=FALSE}
-MyData <- ready.mcmc(clust,quad,param2,rbord=0.5)
-method="twalk"
-Fit <- run.ld(param,MyData,method,iter=10000)
-param <- Fit$Posterior2
-```
