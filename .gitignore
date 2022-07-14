@@ -17,4 +17,5 @@ residuals_smoothed.*
 .Rproj.user
 *.Rproj
 darkmix_steps_files
+figure
 
