@@ -22,7 +22,7 @@ darkmix's documentation!
    introduction
    structure
    installation
-   example1
+   darkmix_steps
 
 
 

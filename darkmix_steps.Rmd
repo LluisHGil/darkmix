@@ -1,19 +1,17 @@
 ---
 title: "darkmix: example of execution"
 date: ""
-output: 
-  html_document:
-    toc: yes
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Example of execution
+
 In this notebook we reproduce the example presented in section 7 of the publication:
 Ll. Hurtado-Gil et al., *Darkmix: Mixture Models for Detection and Characterization of Dark Matter Halos*, submitted to ApJ
-
-For the requirements and installation instructions, see the [documentation](https://darkmix.readthedocs.io/).
 
 Used R packages and functions:
 
@@ -29,7 +27,7 @@ Used R packages and functions:
 Load the necessary functions and packages.
 
 ```{r, message=FALSE}
-source("../../Code/darkmix.R")
+source("Code/darkmix.R")
 library(spatstat)
 library(spatstat.utils)
 library(expint)
@@ -41,7 +39,7 @@ library(LaplacesDemon)
 Read the data set to create the point process object and its quadrature: 
 
 ```{r}
-data <- read.table("../../Data/datacat.txt")
+data <- read.table("Data/datacat.txt")
 minx <- 18; maxx <- 43; 
 miny <- 171; maxy <- 196; 
 minz <- 95; maxz <- 102;
@@ -73,7 +71,7 @@ param_df <- param2profile(param)
 
 The initial guess can be visualized:
 
-```{r, message=FALSE}
+```{r message=FALSE}
 arg = list(mar=c(0,0,0,0), clust=clust, col=2, pch=16,border=2, cex=0.5, cexl=2, lwd=2)
 out <- mixture.model(param, param2, output = NULL, action.draw, arg)
 ```
@@ -89,7 +87,7 @@ param <- ocf$par
 
 For further model refinement we can use the `mask.freeze` functions.
 
-```{r, message=FALSE, include=FALSE}
+```{r, message=FALSE, results='hide'}
 param <- mask.freeze(param, param2, mask.adjust_positions(k,v), clust, quad)
 param <- mask.freeze(param, param2, mask.adjust_radii(k,v), clust, quad)
 param <- mask.freeze(param, param2, mask.adjust_sersic(k,v), clust, quad)
