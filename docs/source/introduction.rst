@@ -26,7 +26,7 @@ The motivation for this project, as well as a detailed description of the algori
 Authors
 -------
 
-The *darkmix* code was written by Lluís Hurtado-Gil (eDreams ODIGEO / Universitat de València), with contributions from Pablo Arnalte-Mur (Universitat de València).
+The *darkmix* code was written by Lluís Hurtado-Gil (eDreams ODIGEO / Universitat de València) and Michael A. Kuhn (Caltech), with contributions from Pablo Arnalte-Mur (Universitat de València).
 
 
 Support and Contributions
