@@ -1773,20 +1773,20 @@ plot.profile <- function(param, param2, clust, comp, xlim=c(0.1, 40), nbin=60, m
   # Plot
   main <- paste('Component', toString(comp))
   miny <- min(mm.pro[,2]); maxy <- max(c(emp.pro[,2], comp.pro[,2], mm.pro[,2]))
-  #png("Profile_xy_3D.png", width=880, height=880)
-  #par(mar=c(6,7,3,0))
+  png("Profile_xy_3D.png", width=880, height=880)
+  par(mar=c(6,7,3,0))
   plot(emp.pro[,1], emp.pro[,2], cex=3, pch=16, log="xy", ylim=c(miny, maxy), 
-       type="b",xlab="", ylab="", main=main, cex.axis=1, cex.main=1)
-  title(xlab=expression(paste("h"^-1, " Mpc", sep="")), line=4, cex.lab=1)
+       type="b",xlab="", ylab="", main=main, cex.axis=3, cex.main=3)
+  title(xlab=expression(paste("h"^-1, " Mpc", sep="")), line=4, cex.lab=3)
   title(ylab="Particle number density", line=2, cex.lab=1)
   lines(comp.pro[,1], comp.pro[,2], lwd=4, col=2)
   lines(mm.pro[,1], mm.pro[,2], lwd=4, col=3)
   if(flag.legend==TRUE) {
   legend("topright", legend=c("Observed profile", "One component profile", 
                               "Mixture model profile"),
-         col=c("black", "red", "green"), lty=1:2, lwd=2, cex=1)
+         col=c("black", "red", "green"), lty=1:2, lwd=2, cex=3)
     }
-  #dev.off()
+  dev.off()
   profiles <- as.data.frame(cbind(emp.pro, comp.pro[,2], mm.pro[,2])) 
   colnames(profiles) <- c("r", "Empyrical", "Individual", "Mixture")
   return(profiles)
