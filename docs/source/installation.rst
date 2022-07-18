@@ -56,6 +56,16 @@ Modify it if any change is needed for your local configuration, and compile the 
 
   make all
 
+.. note::
+
+  Note that the ``kernel_lambda.cpp`` programme is parallelised using *OpenMP*.
+  If your compiler does not support this option, just change the corresponding line in the ``Makefile`` to
+
+  .. code-block::
+  
+    CFLAGS_OPENMP =
+
+
 This should create the three needed executables: ``kernel_lambda``, ``kernel_absolute_residuals`` and ``kernel_fourier_residuals``.
 
 
