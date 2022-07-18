@@ -14,7 +14,7 @@ The folder ``Code`` contains the following files:
 * ``kernel_absolute_residuals.cpp``: C++ code for the residuals kernel density estimation. Not meant to be used directly by the user.
 * ``kernel_fourier_residuals.cpp``: fast C++ code for the residuals kernel density estimation. Not meant to be used directly by the user. Requires the installation of the `FFTW library <http://www.fftw.org/>`_ (see :doc:`installation`).
 
-* ``darkmix_steps.Rmd``: notbook containing the execution steps as used in the publication. Uses the data stored in folder ``Data``. You can see this example of execution in :doc:`example1` (**CHECK!!**).
+* ``darkmix_steps.Rmd``: notbook containing the execution steps as used in the publication. Uses the data stored in folder ``Data``. You can see this example of execution in :doc:`darkmix_steps`.
 
 
 Data
