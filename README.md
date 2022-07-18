@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6854941.svg)](https://doi.org/10.5281/zenodo.6854941)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6854940.svg)](https://doi.org/10.5281/zenodo.6854940)
 
 # darkmix
 Mixture Models for detection and characterization of Dark Matter halos
