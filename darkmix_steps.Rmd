@@ -160,7 +160,7 @@ For example, for component 4:
 
 ```{r}
 comp <- 4
-profiles <- plot.profile(param, param2, clust, comp, xlim=c(0.1,40), nbin=10, flag.legend=TRUE)
+profiles <- plot.profile(param, param2, clust, comp, xlim=c(0.1,40), nbin=25, flag.legend=TRUE)
 ```
 
 

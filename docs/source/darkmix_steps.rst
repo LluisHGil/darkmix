@@ -204,10 +204,10 @@ estimations. For example, for component 4:
 ::
 
     comp <- 4
-    profiles <- plot.profile(param, param2, clust, comp, xlim=c(0.1,40), nbin=60, flag.legend=TRUE)
+    profiles <- plot.profile(param, param2, clust, comp, xlim=c(0.1,40), nbin=25, flag.legend=TRUE)
 
-    ## Warning in xy.coords(x, y, xlabel, ylabel, log): 1 y value <= 0 omitted from
-    ## logarithmic plot
+    ## Warning in cbind(emp.pro, comp.pro[, 2], mm.pro[, 2]): number of rows of result
+    ## is not a multiple of vector length (arg 3)
 
 .. figure:: darkmix_steps_files/figure-markdown_strict/unnamed-chunk-16-1.png
    :alt: 
