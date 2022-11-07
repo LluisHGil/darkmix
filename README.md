@@ -21,8 +21,10 @@ You can find the online documentation for `darkmix` at: <https://darkmix.readthe
 
 The motivation for this project, as well as a detailed description of the algorithm and the code can be found in:
 
-- Ll. Hurtado-Gil, M. A. Kuhn, P. Arnalte-Mur, E. D. Feigelson, V. J. Martínez:
-  *DarkMix: Mixture Models for Detection and Characterization of Dark Matter Halos* (submitted to ApJ)
+- Ll. Hurtado-Gil, M. A. Kuhn, P. Arnalte-Mur, E. D. Feigelson, V. J. Martínez (2022):
+  *DarkMix: Mixture Models for Detection and Characterization of Dark Matter Halos*,
+  The Astrophysical Journal, 939:34; [DOI:10.3847/1538-4357/ac88d4](https://doi.org/10.3847/1538-4357/ac88d4);
+  [arXiv:2208.04194](https://arxiv.org/abs/2208.04194)
 
 
 ## License
